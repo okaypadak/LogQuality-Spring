@@ -32,10 +32,10 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
                 .withLocalDatacenter("datacenter1")
                 .build();
 
-        keyspace = "loganalyst";
-        tableName = "sosyalfaturaelektrik";
+        keyspace = "logquality";
+        tableName = "test";
 
-        String insertQuery = String.format("INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, exception) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keyspace, tableName);
+        String insertQuery = String.format("INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, metrics) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keyspace, tableName);
         preparedStatement = session.prepare(insertQuery);
     }
 
@@ -56,7 +56,7 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
                     .setString("logger", eventObject.getLoggerName())
                     .setString("request_id", eventObject.getMDCPropertyMap().get("requestId"))
                     .setString("log_message", eventObject.getFormattedMessage())
-                    .setString("exception", eventObject.getThrowableProxy() != null ? eventObject.getThrowableProxy().getMessage() : ""));
+                    .setString("metrics", ""));
         } catch (Exception e) {
             addError("Error appending log to Cassandra", e);
         }

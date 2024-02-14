@@ -7,6 +7,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import net.logstash.logback.appender.LogstashTcpSocketAppender;
+import net.logstash.logback.encoder.LogstashEncoder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,12 +47,12 @@ public class LogQualityConfig {
 
         stashAppender.setRollingPolicy(rollingPolicy);
 
-        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-        encoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %X{requestId} %msg%n%exception{full}");
-        encoder.setContext(loggerContext);
-        encoder.start();
+        PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
+        patternLayoutEncoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %X{requestId} %msg%n%exception{full}");
+        patternLayoutEncoder.setContext(loggerContext);
+        patternLayoutEncoder.start();
 
-        stashAppender.setEncoder(encoder);
+        stashAppender.setEncoder(patternLayoutEncoder);
         stashAppender.setContext(loggerContext);
         stashAppender.start();
 
@@ -67,18 +69,25 @@ public class LogQualityConfig {
         consoleAppender.setContext(loggerContext);
         consoleAppender.start();
 
-        //CASSANDRA
+        //Cassandra
         CassandraAppender cassandraAppender = new CassandraAppender();
         cassandraAppender.setName("CASSANDRA");
         cassandraAppender.setContext(loggerContext);
         cassandraAppender.start();
 
 
+        //ELK
+        ElasticsearchAppender elasticsearchAppender = new ElasticsearchAppender();
+        elasticsearchAppender.setIndexName("logquality");
+        elasticsearchAppender.setContext(loggerContext);
+        elasticsearchAppender.start();
+
         // Root Logger Configuration
         rootLogger.detachAndStopAllAppenders();
         rootLogger.addAppender(stashAppender);
         rootLogger.addAppender(consoleAppender);
         rootLogger.addAppender(cassandraAppender);
+        rootLogger.addAppender(elasticsearchAppender);
         rootLogger.setLevel(Level.INFO);
 
     }
