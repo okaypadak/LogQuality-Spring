@@ -32,8 +32,8 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
                 .withLocalDatacenter("datacenter1")
                 .build();
 
-        keyspace = "loganalyst";
-        tableName = "sosyalfaturaelektrik";
+        keyspace = "logquality";
+        tableName = "TEST";
 
         String insertQuery = String.format("INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, exception) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keyspace, tableName);
         preparedStatement = session.prepare(insertQuery);
@@ -65,7 +65,7 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     @Override
     public void stop() {
         super.stop();
-        // Logback UnsynchronizedAppenderBase sınıfı, kendi close metodu çağrıldığında bu metod da çağrılır.
+        session.close();
     }
 
 }
