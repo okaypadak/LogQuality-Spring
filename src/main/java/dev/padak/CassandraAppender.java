@@ -19,7 +19,6 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     private int port = 9042;
     InetSocketAddress address = new InetSocketAddress(url, port);
 
-
     private String username;
     private String password;
 
@@ -35,10 +34,11 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
         keyspace = "logquality";
         tableName = "test";
 
-        String insertQuery = String.format("INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, metrics) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keyspace, tableName);
+        String insertQuery = String.format(
+                "INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, metrics) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                keyspace, tableName);
         preparedStatement = session.prepare(insertQuery);
     }
-
 
     @Override
     protected void append(ILoggingEvent eventObject) {
@@ -65,7 +65,7 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     @Override
     public void stop() {
         super.stop();
-        // Logback UnsynchronizedAppenderBase sınıfı, kendi close metodu çağrıldığında bu metod da çağrılır.
+        session.close();
     }
 
 }

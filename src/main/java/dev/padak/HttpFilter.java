@@ -26,7 +26,6 @@ public class HttpFilter implements Filter {
 
             log.info("HTTP isteği alındı");
 
-            // Diğer filtreleri ve isteği işleme devam et
             chain.doFilter(request, response);
 
             log.info("HTTP isteği tamamlandı");

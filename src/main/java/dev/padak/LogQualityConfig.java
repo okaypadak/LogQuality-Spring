@@ -15,6 +15,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class LogQualityConfig {
+    private static boolean fileLoggingEnabled = true;
+
+    private static boolean jsonLoggingEnabled = true;
+    private static boolean tcpLoggingEnabled = true;
+    private static boolean cassandraLoggingEnabled = false;
 
     @Bean
     public LogAspect logAspect() {
@@ -48,7 +53,8 @@ public class LogQualityConfig {
         stashAppender.setRollingPolicy(rollingPolicy);
 
         PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
-        patternLayoutEncoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %X{requestId} %msg%n%exception{full}");
+        patternLayoutEncoder.setPattern(
+                "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %X{requestId} %msg%n%exception{full}");
         patternLayoutEncoder.setContext(loggerContext);
         patternLayoutEncoder.start();
 
@@ -56,12 +62,13 @@ public class LogQualityConfig {
         stashAppender.setContext(loggerContext);
         stashAppender.start();
 
-        // CONSOLE Appender Configuration
+        // CONSOLE
         ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
         consoleAppender.setName("CONSOLE");
 
         PatternLayoutEncoder consoleEncoder = new PatternLayoutEncoder();
-        consoleEncoder.setPattern("%highlight(%d{yyyy-MM-dd HH:mm:ss.SSS} [%21thread] %-5level %-35logger{36} - %X{requestId} %msg%n%exception{0})");
+        consoleEncoder.setPattern(
+                "%highlight(%d{yyyy-MM-dd HH:mm:ss.SSS} [%21thread] %-5level %-35logger{36} - %X{requestId} %msg%n%exception{0})");
         consoleEncoder.setContext(loggerContext);
         consoleEncoder.start();
 
@@ -69,14 +76,13 @@ public class LogQualityConfig {
         consoleAppender.setContext(loggerContext);
         consoleAppender.start();
 
-        //Cassandra
+        // Cassandra
         CassandraAppender cassandraAppender = new CassandraAppender();
         cassandraAppender.setName("CASSANDRA");
         cassandraAppender.setContext(loggerContext);
         cassandraAppender.start();
 
-
-        //ELK
+        // ELK
         ElasticsearchAppender elasticsearchAppender = new ElasticsearchAppender();
         elasticsearchAppender.setIndexName("logquality");
         elasticsearchAppender.setContext(loggerContext);
