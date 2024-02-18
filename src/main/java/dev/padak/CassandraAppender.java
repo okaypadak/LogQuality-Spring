@@ -19,6 +19,7 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     private int port = 9042;
     InetSocketAddress address = new InetSocketAddress(url, port);
 
+
     private String username;
     private String password;
 
@@ -31,14 +32,13 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
                 .withLocalDatacenter("datacenter1")
                 .build();
 
-        keyspace = "logquality";
+        keyspace = "loganalyst";
         tableName = "test";
 
-        String insertQuery = String.format(
-                "INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, metrics) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                keyspace, tableName);
+        String insertQuery = String.format("INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, exception) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keyspace, tableName);
         preparedStatement = session.prepare(insertQuery);
     }
+
 
     @Override
     protected void append(ILoggingEvent eventObject) {
@@ -56,7 +56,7 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
                     .setString("logger", eventObject.getLoggerName())
                     .setString("request_id", eventObject.getMDCPropertyMap().get("requestId"))
                     .setString("log_message", eventObject.getFormattedMessage())
-                    .setString("metrics", ""));
+                    .setString("exception", eventObject.getThrowableProxy() != null ? eventObject.getThrowableProxy().getMessage() : ""));
         } catch (Exception e) {
             addError("Error appending log to Cassandra", e);
         }
@@ -65,7 +65,10 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     @Override
     public void stop() {
         super.stop();
+
         session.close();
+
+        // Logback UnsynchronizedAppenderBase sınıfı, kendi close metodu çağrıldığında bu metod da çağrılır.
     }
 
 }

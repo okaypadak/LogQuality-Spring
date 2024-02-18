@@ -7,68 +7,46 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import net.logstash.logback.appender.LogstashTcpSocketAppender;
-import net.logstash.logback.encoder.LogstashEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
 
-@Configuration
+import java.util.Map;
 public class LogQualityConfig {
-    private static boolean fileLoggingEnabled = true;
 
-    private static boolean jsonLoggingEnabled = true;
-    private static boolean tcpLoggingEnabled = true;
-    private static boolean cassandraLoggingEnabled = false;
+    @Value("${logquality.file}")
+    private Boolean file;
 
-    @Bean
-    public LogAspect logAspect() {
-        return new LogAspect();
-    }
+    @Value("${logquality.tcp}")
+    private Boolean tcp;
 
-    @Bean
-    public FilterRegistrationBean<HttpFilter> loggingFilter() {
-        FilterRegistrationBean<HttpFilter> registrationBean = new FilterRegistrationBean<>();
+    @Value("${logquality.filebeat}")
+    private Boolean filebeat;
 
-        registrationBean.setFilter(new HttpFilter());
-        registrationBean.addUrlPatterns("/*");
+    @Value("${logquality.cassandra}")
+    private Boolean cassandra;
 
-        return registrationBean;
-    }
 
-    public static void configureLogback(LoggerContext loggerContext) {
+    public void configureLogback(LoggerContext loggerContext) {
 
         ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.detachAndStopAllAppenders();
 
-        RollingFileAppender<ILoggingEvent> stashAppender = new RollingFileAppender<>();
-        stashAppender.setName("STASH");
-        stashAppender.setFile("logback/uptLog.log");
-
-        TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
-        rollingPolicy.setFileNamePattern("logback/uptLog.%d{yyyy-MM-dd}.log");
-        rollingPolicy.setParent(stashAppender);
-        rollingPolicy.setContext(loggerContext);
-        rollingPolicy.start();
-
-        stashAppender.setRollingPolicy(rollingPolicy);
-
-        PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
-        patternLayoutEncoder.setPattern(
-                "%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %X{requestId} %msg%n%exception{full}");
-        patternLayoutEncoder.setContext(loggerContext);
-        patternLayoutEncoder.start();
-
-        stashAppender.setEncoder(patternLayoutEncoder);
-        stashAppender.setContext(loggerContext);
-        stashAppender.start();
-
-        // CONSOLE
+        //CONSOLE
         ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
         consoleAppender.setName("CONSOLE");
 
         PatternLayoutEncoder consoleEncoder = new PatternLayoutEncoder();
-        consoleEncoder.setPattern(
-                "%highlight(%d{yyyy-MM-dd HH:mm:ss.SSS} [%21thread] %-5level %-35logger{36} - %X{requestId} %msg%n%exception{0})");
+        consoleEncoder.setPattern("%highlight(%d{yyyy-MM-dd HH:mm:ss.SSS} [%21thread] %-5level %-35logger{36} - %X{requestId} %msg%n%exception{0})");
         consoleEncoder.setContext(loggerContext);
         consoleEncoder.start();
 
@@ -76,25 +54,89 @@ public class LogQualityConfig {
         consoleAppender.setContext(loggerContext);
         consoleAppender.start();
 
-        // Cassandra
-        CassandraAppender cassandraAppender = new CassandraAppender();
-        cassandraAppender.setName("CASSANDRA");
-        cassandraAppender.setContext(loggerContext);
-        cassandraAppender.start();
 
-        // ELK
-        ElasticsearchAppender elasticsearchAppender = new ElasticsearchAppender();
-        elasticsearchAppender.setIndexName("logquality");
-        elasticsearchAppender.setContext(loggerContext);
-        elasticsearchAppender.start();
-
-        // Root Logger Configuration
-        rootLogger.detachAndStopAllAppenders();
-        rootLogger.addAppender(stashAppender);
         rootLogger.addAppender(consoleAppender);
-        rootLogger.addAppender(cassandraAppender);
-        rootLogger.addAppender(elasticsearchAppender);
+
+        //ONLY FILE
+        if (file) {
+
+            RollingFileAppender<ILoggingEvent> stashAppender = new RollingFileAppender<>();
+            stashAppender.setName("FILE");
+            stashAppender.setFile("logback/quality.log");
+
+            TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
+            rollingPolicy.setFileNamePattern("logback/quality.%d{yyyy-MM-dd}.log");
+            rollingPolicy.setParent(stashAppender);
+            rollingPolicy.setContext(loggerContext);
+            rollingPolicy.start();
+
+            stashAppender.setRollingPolicy(rollingPolicy);
+
+            PatternLayoutEncoder patternLayoutEncoder = new PatternLayoutEncoder();
+            patternLayoutEncoder.setPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %X{requestId} %msg%n%exception{full}");
+            patternLayoutEncoder.setContext(loggerContext);
+            patternLayoutEncoder.start();
+
+            stashAppender.setEncoder(patternLayoutEncoder);
+            stashAppender.setContext(loggerContext);
+            stashAppender.start();
+
+            rootLogger.addAppender(stashAppender);
+        }
+
+        if (filebeat) {
+            //JSON FILE
+            RollingFileAppender<ILoggingEvent> elkAppender = new RollingFileAppender<>();
+            elkAppender.setName("FILEBAEAT_JSON");
+            elkAppender.setFile("logback/filebeat.json");
+
+            TimeBasedRollingPolicy<ILoggingEvent> ElkRollingPolicy = new TimeBasedRollingPolicy<>();
+            ElkRollingPolicy.setFileNamePattern("logback/filebeat.%d{yyyy-MM-dd}.json");
+            ElkRollingPolicy.setParent(elkAppender);
+            ElkRollingPolicy.setContext(loggerContext);
+            ElkRollingPolicy.start();
+
+            elkAppender.setRollingPolicy(ElkRollingPolicy);
+
+            elkAppender.setEncoder(new EncoderJSON());
+            elkAppender.setContext(loggerContext);
+            elkAppender.start();
+
+            rootLogger.addAppender(elkAppender);
+
+        }
+
+        if (tcp) {
+            //LOGSTASH TCP
+            LogstashTcpSocketAppender logstashTcpSocketAppender = new LogstashTcpSocketAppender();
+            logstashTcpSocketAppender.setName("TCP_LOG");
+            logstashTcpSocketAppender.setContext(loggerContext);
+            logstashTcpSocketAppender.addDestination("localhost:5044");
+            EncoderCompositeJSON encoderCompositeJSON = new EncoderCompositeJSON();
+            encoderCompositeJSON.setContext(loggerContext);
+            encoderCompositeJSON.start();
+            logstashTcpSocketAppender.setEncoder(encoderCompositeJSON);
+            logstashTcpSocketAppender.start();
+
+            rootLogger.addAppender(logstashTcpSocketAppender);
+        }
+
+
+        if (cassandra) {
+            //CASSANDRA
+            CassandraAppender cassandraAppender = new CassandraAppender();
+            cassandraAppender.setName("CASSANDRA");
+            cassandraAppender.setContext(loggerContext);
+            cassandraAppender.start();
+
+            rootLogger.addAppender(cassandraAppender);
+
+        }
+
         rootLogger.setLevel(Level.INFO);
+
+
+
 
     }
 }

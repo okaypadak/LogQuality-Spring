@@ -36,7 +36,6 @@ public class HttpFilter implements Filter {
 
     @Override
     public void destroy() {
-        // İhtiyaç halinde destroy işlemleri
     }
 
     public static String generateRequestId() {
