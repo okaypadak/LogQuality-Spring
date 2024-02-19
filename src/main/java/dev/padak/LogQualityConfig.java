@@ -26,7 +26,7 @@ public class LogQualityConfig {
     @Value("${logquality.file}")
     private Boolean file;
 
-    @Value("${logquality.logstash}")
+    @Value("${logquality.logstash.connection}")
     private Boolean logstash;
 
     @Value("${logquality.logstash.host}")
@@ -38,8 +38,20 @@ public class LogQualityConfig {
     @Value("${logquality.filebeat}")
     private Boolean filebeat;
 
-    @Value("${logquality.cassandra}")
+    @Value("${logquality.cassandra.connection}")
     private Boolean cassandra;
+
+    @Value("${logquality.cassandra.host}")
+    private String host;
+
+    @Value("${logquality.cassandra.port}")
+    private Integer port;
+
+    @Value("${logquality.cassandra.keyspace}")
+    private String keyspace;
+
+    @Value("${logquality.cassandra.tableName}")
+    private String tableName;
 
 
     public void configureLogback(LoggerContext loggerContext) {
@@ -48,7 +60,7 @@ public class LogQualityConfig {
         rootLogger.setLevel(Level.INFO);
 
         ch.qos.logback.classic.Logger rootLoggerDebug = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLoggerDebug.setLevel(Level.DEBUG);
+        rootLoggerDebug.setLevel(Level.INFO);
 
         rootLogger.detachAndStopAllAppenders();
         rootLoggerDebug.detachAndStopAllAppenders();
@@ -136,7 +148,7 @@ public class LogQualityConfig {
 
         if (cassandra) {
             //CASSANDRA
-            CassandraAppender cassandraAppender = new CassandraAppender();
+            CassandraAppender cassandraAppender = new CassandraAppender(host, port, keyspace, tableName);
             cassandraAppender.setName("CASSANDRA");
             cassandraAppender.setContext(loggerContext);
             cassandraAppender.start();
