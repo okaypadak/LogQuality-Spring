@@ -39,7 +39,13 @@ public class LogQualityConfig {
     public void configureLogback(LoggerContext loggerContext) {
 
         ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLogger.setLevel(Level.INFO);
+
+        ch.qos.logback.classic.Logger rootLoggerDebug = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        rootLoggerDebug.setLevel(Level.DEBUG);
+
         rootLogger.detachAndStopAllAppenders();
+        rootLoggerDebug.detachAndStopAllAppenders();
 
         //CONSOLE
         ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
@@ -57,9 +63,9 @@ public class LogQualityConfig {
 
         rootLogger.addAppender(consoleAppender);
 
-        //ONLY FILE
-        if (file) {
 
+        if (file) {
+            //ONLY FILE
             RollingFileAppender<ILoggingEvent> stashAppender = new RollingFileAppender<>();
             stashAppender.setName("FILE");
             stashAppender.setFile("logback/quality.log");
@@ -81,7 +87,7 @@ public class LogQualityConfig {
             stashAppender.setContext(loggerContext);
             stashAppender.start();
 
-            rootLogger.addAppender(stashAppender);
+            rootLoggerDebug.addAppender(stashAppender);
         }
 
         if (filebeat) {
@@ -102,7 +108,7 @@ public class LogQualityConfig {
             elkAppender.setContext(loggerContext);
             elkAppender.start();
 
-            rootLogger.addAppender(elkAppender);
+            rootLoggerDebug.addAppender(elkAppender);
 
         }
 
@@ -118,7 +124,7 @@ public class LogQualityConfig {
             logstashTcpSocketAppender.setEncoder(encoderCompositeJSON);
             logstashTcpSocketAppender.start();
 
-            rootLogger.addAppender(logstashTcpSocketAppender);
+            rootLoggerDebug.addAppender(logstashTcpSocketAppender);
         }
 
 
@@ -129,14 +135,9 @@ public class LogQualityConfig {
             cassandraAppender.setContext(loggerContext);
             cassandraAppender.start();
 
-            rootLogger.addAppender(cassandraAppender);
+            rootLoggerDebug.addAppender(cassandraAppender);
 
         }
-
-        rootLogger.setLevel(Level.INFO);
-
-
-
 
     }
 }
