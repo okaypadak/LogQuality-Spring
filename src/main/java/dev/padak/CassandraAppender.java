@@ -4,20 +4,30 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
-    private CqlSession session;
+    @Value("${logquality.cassandra.host}")
+    private String host;
+
+    @Value("${logquality.cassandra.port}")
+    private Integer port;
+
+    @Value("${logquality.cassandra.keyspace}")
     private String keyspace;
+
+    @Value("${logquality.cassandra.tableName}")
     private String tableName;
+
+    private CqlSession session;
     private PreparedStatement preparedStatement;
 
-    String url = "localhost";
-    private int port = 9042;
-    InetSocketAddress address = new InetSocketAddress(url, port);
+
+    InetSocketAddress address = new InetSocketAddress(host, port);
 
 
     private String username;
@@ -54,7 +64,7 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
                     .setString("thread", eventObject.getThreadName())
                     .setString("log_level", eventObject.getLevel().toString())
                     .setString("logger", eventObject.getLoggerName())
-                    .setString("request_id", eventObject.getMDCPropertyMap().get("requestId"))
+                    .setString("logId", eventObject.getMDCPropertyMap().get("requestId"))
                     .setString("log_message", eventObject.getFormattedMessage())
                     .setString("exception", eventObject.getThrowableProxy() != null ? eventObject.getThrowableProxy().getMessage() : ""));
         } catch (Exception e) {
@@ -68,7 +78,6 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
 
         session.close();
 
-        // Logback UnsynchronizedAppenderBase sınıfı, kendi close metodu çağrıldığında bu metod da çağrılır.
     }
 
 }

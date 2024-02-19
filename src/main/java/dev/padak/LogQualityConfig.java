@@ -26,8 +26,14 @@ public class LogQualityConfig {
     @Value("${logquality.file}")
     private Boolean file;
 
-    @Value("${logquality.tcp}")
-    private Boolean tcp;
+    @Value("${logquality.logstash}")
+    private Boolean logstash;
+
+    @Value("${logquality.logstash.host}")
+    private String logstash_host;
+
+    @Value("${logquality.logstash.port}")
+    private String logstash_port;
 
     @Value("${logquality.filebeat}")
     private Boolean filebeat;
@@ -112,12 +118,12 @@ public class LogQualityConfig {
 
         }
 
-        if (tcp) {
+        if (logstash) {
             //LOGSTASH TCP
             LogstashTcpSocketAppender logstashTcpSocketAppender = new LogstashTcpSocketAppender();
             logstashTcpSocketAppender.setName("TCP_LOG");
             logstashTcpSocketAppender.setContext(loggerContext);
-            logstashTcpSocketAppender.addDestination("localhost:5044");
+            logstashTcpSocketAppender.addDestination(logstash_host+":"+logstash_port);
             EncoderCompositeJSON encoderCompositeJSON = new EncoderCompositeJSON();
             encoderCompositeJSON.setContext(loggerContext);
             encoderCompositeJSON.start();
