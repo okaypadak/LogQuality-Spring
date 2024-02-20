@@ -53,8 +53,6 @@ public class LogQualityDepency {
         @Scheduled(fixedRate = 10000) // 10 seconds
         public void logCPUUsage() {
 
-
-
             Double systemCpuUsage = metricsEndpoint.metric(METRIC_NAME, null)
                     .getMeasurements()
                     .stream()
