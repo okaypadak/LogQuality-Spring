@@ -44,11 +44,11 @@ public class LogQualityDepency {
     private static final double MAX_USAGE = 0.50D;
 
 
-    @Autowired
-    MetricsEndpoint metricsEndpoint;
-
     @Component
     public class LogMetrics {
+
+        @Autowired
+        MetricsEndpoint metricsEndpoint;
 
         @Scheduled(fixedRate = 10000) // 10 seconds
         public void logCPUUsage() {
