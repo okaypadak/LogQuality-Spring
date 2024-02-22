@@ -1,5 +1,7 @@
 package dev.padak;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -13,14 +15,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 
 @Configuration
 @EnableScheduling
 @Slf4j
 public class LogQualityDepency {
-
 
     @Bean
     public FilterRegistrationBean<HttpFilter> loggingFilter() {
@@ -40,9 +40,6 @@ public class LogQualityDepency {
     @Bean
     public LogQualityConfig logQualityConfig() { return new LogQualityConfig();}
 
-    private static final String METRIC_NAME = "system.cpu.usage";
-    private static final double MAX_USAGE = 0.50D;
-
 
     @Component
     public class LogMetrics {
@@ -52,18 +49,27 @@ public class LogQualityDepency {
 
         @Scheduled(fixedRate = 10000) // 10 seconds
         public void logCPUUsage() {
+            Set<String> metricNames = metricsEndpoint.listNames().getNames();
+            Map<String, Object> metricMap = new HashMap<>();
 
-            Double systemCpuUsage = metricsEndpoint.metric(METRIC_NAME, null)
-                    .getMeasurements()
-                    .stream()
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .map(MetricsEndpoint.Sample::getValue)
-                    .filter(Double::isFinite)
-                    .orElse(0.0D);
+            for (String metricName : metricNames) {
+                Double metricValue = metricsEndpoint.metric(metricName, null)
+                        .getMeasurements()
+                        .stream()
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .map(MetricsEndpoint.Sample::getValue)
+                        .filter(Double::isFinite)
+                        .orElse(0.0D);
+                metricMap.put(metricName, metricValue);
+            }
 
-            log.info("CPU {} ", systemCpuUsage);
-
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                log.info("metrics: {}", objectMapper.writeValueAsString(metricMap));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
         }
     }
 
