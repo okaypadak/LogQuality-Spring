@@ -4,15 +4,12 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
 public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
-    
+
     private CqlSession session;
     private PreparedStatement preparedStatement;
 
@@ -35,18 +32,23 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
 
         InetSocketAddress address = new InetSocketAddress(host, port);
 
-        session = CqlSession.builder()
-                .addContactPoint(address)
-                .withLocalDatacenter("datacenter1")
-                .build();
+        try {
+            session = CqlSession.builder()
+                    .addContactPoint(address)
+                    .withLocalDatacenter("datacenter1")
+                    .build();
 
-        String insertQuery = String.format("INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, exception) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keyspace, tableName);
-        preparedStatement = session.prepare(insertQuery);
+            String insertQuery = String.format("INSERT INTO %s.%s (ID, timestamp, thread, log_level, logger, request_id, log_message, exception) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", keyspace, tableName);
+            preparedStatement = session.prepare(insertQuery);
+        } catch (Exception e) {
+            addError("Error starting Cassandra session", e);
+        }
     }
 
 
     @Override
     protected void append(ILoggingEvent eventObject) {
+
         if (session == null) {
             addError("Cassandra session is not available");
             return;
@@ -71,8 +73,13 @@ public class CassandraAppender extends UnsynchronizedAppenderBase<ILoggingEvent>
     public void stop() {
         super.stop();
 
-        session.close();
-
+        try {
+            if (session != null && !session.isClosed()) {
+                session.close();
+            }
+        } catch (Exception e) {
+            addError("Error closing Cassandra session", e);
+        }
     }
 
 }
