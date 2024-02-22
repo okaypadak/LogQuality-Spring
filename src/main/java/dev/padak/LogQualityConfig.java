@@ -7,20 +7,9 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import net.logstash.logback.appender.LogstashTcpSocketAppender;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
-import java.util.Map;
 public class LogQualityConfig {
 
     @Value("${logquality.file}")
@@ -56,14 +45,17 @@ public class LogQualityConfig {
 
     public void configureLogback(LoggerContext loggerContext) {
 
-        ch.qos.logback.classic.Logger rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLogger.setLevel(Level.INFO);
 
-        ch.qos.logback.classic.Logger rootLoggerDebug = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-        rootLoggerDebug.setLevel(Level.INFO);
+        loggerContext.getLogger("ROOT").detachAndStopAllAppenders();
 
-        rootLogger.detachAndStopAllAppenders();
-        rootLoggerDebug.detachAndStopAllAppenders();
+        ch.qos.logback.classic.Logger rootLoggerDebug = loggerContext.getLogger("ROOT");
+        rootLoggerDebug.setLevel(Level.DEBUG);
+
+        ch.qos.logback.classic.Logger rootLoggerInfo = loggerContext.getLogger("ROOT");
+        rootLoggerInfo.setLevel(Level.INFO);
+
+        FilterLog filterLog = new FilterLog();
+        filterLog.start();
 
         //CONSOLE
         ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
@@ -73,13 +65,14 @@ public class LogQualityConfig {
         consoleEncoder.setPattern("%highlight(%d{yyyy-MM-dd HH:mm:ss.SSS} [%21thread] %-5level %-35logger{36} - %X{requestId} %msg%n%exception{0})");
         consoleEncoder.setContext(loggerContext);
         consoleEncoder.start();
-
+        consoleAppender.addFilter(filterLog);
         consoleAppender.setEncoder(consoleEncoder);
         consoleAppender.setContext(loggerContext);
         consoleAppender.start();
 
 
-        rootLogger.addAppender(consoleAppender);
+        rootLoggerInfo.addAppender(consoleAppender);
+
 
 
         if (file) {
@@ -104,7 +97,7 @@ public class LogQualityConfig {
             stashAppender.setEncoder(patternLayoutEncoder);
             stashAppender.setContext(loggerContext);
             stashAppender.start();
-
+            stashAppender.addFilter(filterLog);
             rootLoggerDebug.addAppender(stashAppender);
         }
 
@@ -125,24 +118,47 @@ public class LogQualityConfig {
             elkAppender.setEncoder(new EncoderJSON());
             elkAppender.setContext(loggerContext);
             elkAppender.start();
-
+            elkAppender.addFilter(filterLog);
             rootLoggerDebug.addAppender(elkAppender);
 
         }
 
         if (logstash) {
-            //LOGSTASH TCP
-            LogstashTcpSocketAppender logstashTcpSocketAppender = new LogstashTcpSocketAppender();
-            logstashTcpSocketAppender.setName("TCP_LOG");
-            logstashTcpSocketAppender.setContext(loggerContext);
-            logstashTcpSocketAppender.addDestination(logstash_host+":"+logstash_port);
-            EncoderCompositeJSON encoderCompositeJSON = new EncoderCompositeJSON();
-            encoderCompositeJSON.setContext(loggerContext);
-            encoderCompositeJSON.start();
-            logstashTcpSocketAppender.setEncoder(encoderCompositeJSON);
-            logstashTcpSocketAppender.start();
+            try {
+                //LOGSTASH LOG
+                LogstashTcpSocketAppender logstashTcpLogSocketAppender = new LogstashTcpSocketAppender();
+                logstashTcpLogSocketAppender.setName("TCP_LOG");
+                logstashTcpLogSocketAppender.setContext(loggerContext);
+                logstashTcpLogSocketAppender.addDestination(logstash_host + ":" + logstash_port);
+                logstashTcpLogSocketAppender.addFilter(filterLog);
+                EncoderCompositeLog encoderCompositeLog = new EncoderCompositeLog();
+                encoderCompositeLog.setContext(loggerContext);
+                encoderCompositeLog.start();
+                logstashTcpLogSocketAppender.setEncoder(encoderCompositeLog);
+                logstashTcpLogSocketAppender.start();
 
-            rootLoggerDebug.addAppender(logstashTcpSocketAppender);
+                rootLoggerDebug.addAppender(logstashTcpLogSocketAppender);
+
+                //LOGSTASH METRIC
+                FilterMetric filterMetric = new FilterMetric();
+                filterMetric.start();
+
+                LogstashTcpSocketAppender logstashTcpMetricsSocketAppender = new LogstashTcpSocketAppender();
+                logstashTcpMetricsSocketAppender.setName("TCP_LOG");
+                logstashTcpMetricsSocketAppender.setContext(loggerContext);
+                logstashTcpMetricsSocketAppender.addDestination(logstash_host + ":" + logstash_port);
+                logstashTcpMetricsSocketAppender.addFilter(filterLog);
+                EncoderCompositeMetric encoderCompositeMetric = new EncoderCompositeMetric();
+                encoderCompositeMetric.setContext(loggerContext);
+                encoderCompositeMetric.start();
+                logstashTcpMetricsSocketAppender.setEncoder(encoderCompositeMetric);
+                logstashTcpMetricsSocketAppender.start();
+
+                rootLoggerDebug.addAppender(logstashTcpMetricsSocketAppender);
+
+            } catch (Exception e) {
+                rootLoggerDebug.error("Elasticsearch hata!");
+            }
         }
 
 
@@ -152,10 +168,15 @@ public class LogQualityConfig {
             cassandraAppender.setName("CASSANDRA");
             cassandraAppender.setContext(loggerContext);
             cassandraAppender.start();
-
+            cassandraAppender.addFilter(filterLog);
             rootLoggerDebug.addAppender(cassandraAppender);
 
         }
+
+
+
+
+
 
     }
 }
