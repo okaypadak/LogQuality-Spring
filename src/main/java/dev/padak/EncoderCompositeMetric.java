@@ -2,6 +2,7 @@ package dev.padak;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.logstash.logback.composite.JsonProviders;
 import net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder;
 
 import java.io.IOException;
@@ -13,9 +14,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class EncoderCompositeJSON extends LoggingEventCompositeJsonEncoder
+public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
 {
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public void encode(ILoggingEvent event, OutputStream outputStream) throws IOException {
 
@@ -40,9 +42,8 @@ public class EncoderCompositeJSON extends LoggingEventCompositeJsonEncoder
             logMap.put("loggerName", loggerName);
             logMap.put("exception", exception);
 
-
             Map<String, String> fields = new HashMap<>();
-            fields.put("app", "test");
+            fields.put("app", "test_metric");
 
             logMap.put("fields",fields);
 
