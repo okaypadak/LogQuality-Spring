@@ -3,6 +3,8 @@ package dev.padak;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.logstash.logback.composite.JsonProviders;
+import net.logstash.logback.composite.loggingevent.LoggingEventFormattedTimestampJsonProvider;
+import net.logstash.logback.composite.loggingevent.MessageJsonProvider;
 import net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder;
 
 import java.io.IOException;
@@ -18,6 +20,24 @@ public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
 {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public EncoderCompositeMetric() {
+        setProviders(createProviders());
+    }
+
+    private JsonProviders<ILoggingEvent> createProviders() {
+        LoggingEventFormattedTimestampJsonProvider timestampProvider = new LoggingEventFormattedTimestampJsonProvider();
+        timestampProvider.setTimeZone("UTC");
+        timestampProvider.setFieldName("@timestamp");
+        timestampProvider.setPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+
+        JsonProviders<ILoggingEvent> providers = new JsonProviders<>();
+        providers.addProvider(timestampProvider);
+
+
+        return providers;
+    }
+
     @Override
     public void encode(ILoggingEvent event, OutputStream outputStream) throws IOException {
 
@@ -25,25 +45,14 @@ public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
         try {
-            String timestamp = dateFormat.format(new Date(event.getTimeStamp()));
-            String threadName = event.getThreadName();
-            String level = event.getLevel().toString();
-            String loggerName = event.getLoggerName();
-            String requestId = String.valueOf(event.getMDCPropertyMap().get("requestId") != null ? event.getMDCPropertyMap().get("requestId") : "");
             String message = event.getFormattedMessage();
-            String exception = event.getThrowableProxy() != null ? event.getThrowableProxy().toString() : "";
 
             Map<String, Object> logMap = new LinkedHashMap<>();
-            logMap.put("timestamp", timestamp);
-            logMap.put("level", level);
-            logMap.put("logId", requestId);
             logMap.put("message", message);
-            logMap.put("threadName", threadName);
-            logMap.put("loggerName", loggerName);
-            logMap.put("exception", exception);
+
 
             Map<String, String> fields = new HashMap<>();
-            fields.put("app", "test_metric");
+            fields.put("app", "metric");
 
             logMap.put("fields",fields);
 

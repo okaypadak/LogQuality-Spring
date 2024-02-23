@@ -32,7 +32,7 @@ public class EncoderCompositeLog extends LoggingEventCompositeJsonEncoder
             String exception = event.getThrowableProxy() != null ? event.getThrowableProxy().toString() : "";
 
             Map<String, Object> logMap = new LinkedHashMap<>();
-            logMap.put("timestamp", timestamp);
+            logMap.put("@timestamp", timestamp);
             logMap.put("level", level);
             logMap.put("logId", requestId);
             logMap.put("message", message);
@@ -42,7 +42,7 @@ public class EncoderCompositeLog extends LoggingEventCompositeJsonEncoder
 
 
             Map<String, String> fields = new HashMap<>();
-            fields.put("app", "test");
+            fields.put("app", "logs");
 
             logMap.put("fields",fields);
 
