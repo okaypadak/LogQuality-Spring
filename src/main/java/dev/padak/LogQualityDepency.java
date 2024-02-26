@@ -48,7 +48,7 @@ public class LogQualityDepency {
         MetricsEndpoint metricsEndpoint;
 
         @Scheduled(fixedRate = 10000) // 10 seconds
-        public void logCPUUsage() {
+        public void metrics() {
             Set<String> metricNames = metricsEndpoint.listNames().getNames();
             Map<String, Object> metricMap = new HashMap<>();
 
