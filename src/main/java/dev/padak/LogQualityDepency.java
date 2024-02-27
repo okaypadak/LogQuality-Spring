@@ -47,7 +47,7 @@ public class LogQualityDepency {
         @Autowired
         MetricsEndpoint metricsEndpoint;
 
-        @Scheduled(fixedRate = 10000) // 10 seconds
+        @Scheduled(fixedRate = 10000)
         public void metrics() {
             Set<String> metricNames = metricsEndpoint.listNames().getNames();
             Map<String, Object> metricMap = new HashMap<>();
@@ -66,7 +66,25 @@ public class LogQualityDepency {
 
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
-                log.info("metrics: {}", objectMapper.writeValueAsString(metricMap));
+                log.info("system metrics: {}", objectMapper.writeValueAsString(metricMap));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Autowired
+        MeterRegistry meterRegistry;
+
+        @Scheduled(fixedRate = 10000*6)
+        public void http() {
+
+            Map<String, Object> metricMap = new HashMap<>();
+            MetricsEndpoint.MetricDescriptor httpMetric = metricsEndpoint.metric("http.server.requests", null);
+            metricMap.put("http.server.requests", httpMetric);
+
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                log.info("http metrics: {}", objectMapper.writeValueAsString(metricMap));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
