@@ -19,16 +19,18 @@ import java.util.Map;
 public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
 {
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final String projectName;
 
-    public EncoderCompositeMetric() {
+    public EncoderCompositeMetric(String projectName) {
         setProviders(createProviders());
+        this.projectName = projectName;
     }
 
     private JsonProviders<ILoggingEvent> createProviders() {
         LoggingEventFormattedTimestampJsonProvider timestampProvider = new LoggingEventFormattedTimestampJsonProvider();
-        timestampProvider.setTimeZone("UTC");
+        timestampProvider.setTimeZone("Europe/Istanbul");
         timestampProvider.setFieldName("@timestamp");
-        timestampProvider.setPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        timestampProvider.setPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
 
         JsonProviders<ILoggingEvent> providers = new JsonProviders<>();
@@ -42,17 +44,15 @@ public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
     public void encode(ILoggingEvent event, OutputStream outputStream) throws IOException {
 
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-
         try {
             String message = event.getFormattedMessage();
 
             Map<String, Object> logMap = new LinkedHashMap<>();
             logMap.put("message", message);
-
+            logMap.put("processed", false);
 
             Map<String, String> fields = new HashMap<>();
-            fields.put("app", "metric");
+            fields.put("app", projectName+"metrics");
 
             logMap.put("fields",fields);
 

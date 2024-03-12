@@ -9,6 +9,7 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.appender.LogstashTcpSocketAppender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,8 +22,11 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+@Slf4j
 public class LogQualityConfig {
 
+    @Value("${logquality.project_name}")
+    private String projectName;
     @Value("${logquality.file}")
     private Boolean file;
 
@@ -135,29 +139,38 @@ public class LogQualityConfig {
 
         if (logstash) {
             //LOGSTASH TCP
-            LogstashTcpSocketAppender LogsTcpSocketAppender = new LogstashTcpSocketAppender();
-            LogsTcpSocketAppender.setName("TCP_LOG");
-            LogsTcpSocketAppender.setContext(loggerContext);
-            LogsTcpSocketAppender.addDestination(logstash_host+":"+logstash_port);
-            EncoderCompositeLog encoderCompositeLog = new EncoderCompositeLog();
-            encoderCompositeLog.setContext(loggerContext);
-            LogsTcpSocketAppender.setEncoder(encoderCompositeLog);
-            LogsTcpSocketAppender.addFilter(new FilterLog());
-            LogsTcpSocketAppender.start();
 
-            rootLoggerDebug.addAppender(LogsTcpSocketAppender);
+            try {
+                LogstashTcpSocketAppender LogsTcpSocketAppender = new LogstashTcpSocketAppender();
+                LogsTcpSocketAppender.setName("TCP_LOG");
+                LogsTcpSocketAppender.setContext(loggerContext);
+                LogsTcpSocketAppender.addDestination(logstash_host+":"+logstash_port);
+                EncoderCompositeLog encoderCompositeLog = new EncoderCompositeLog(projectName);
+                encoderCompositeLog.setContext(loggerContext);
+                LogsTcpSocketAppender.setEncoder(encoderCompositeLog);
+                LogsTcpSocketAppender.addFilter(new FilterLog());
+                LogsTcpSocketAppender.start();
 
-            LogstashTcpSocketAppender MetricTcpSocketAppender = new LogstashTcpSocketAppender();
-            MetricTcpSocketAppender.setName("TCP_METRIC");
-            MetricTcpSocketAppender.setContext(loggerContext);
-            MetricTcpSocketAppender.addDestination(logstash_host+":"+logstash_port);
-            EncoderCompositeMetric encoderCompositeMetric = new EncoderCompositeMetric();
-            encoderCompositeLog.setContext(loggerContext);
-            MetricTcpSocketAppender.setEncoder(encoderCompositeMetric);
-            MetricTcpSocketAppender.addFilter(new FilterMetric());
-            MetricTcpSocketAppender.start();
+                rootLoggerDebug.addAppender(LogsTcpSocketAppender);
 
-            rootLoggerDebug.addAppender(MetricTcpSocketAppender);
+                LogstashTcpSocketAppender MetricTcpSocketAppender = new LogstashTcpSocketAppender();
+                MetricTcpSocketAppender.setName("TCP_METRIC");
+                MetricTcpSocketAppender.setContext(loggerContext);
+                MetricTcpSocketAppender.addDestination(logstash_host+":"+logstash_port);
+                EncoderCompositeMetric encoderCompositeMetric = new EncoderCompositeMetric(projectName);
+                encoderCompositeLog.setContext(loggerContext);
+                MetricTcpSocketAppender.setEncoder(encoderCompositeMetric);
+                MetricTcpSocketAppender.addFilter(new FilterMetric());
+                MetricTcpSocketAppender.start();
+
+                rootLoggerDebug.addAppender(MetricTcpSocketAppender);
+
+            } catch (Exception e) {
+                // Bağlantı hatası durumunda loglama
+                log.error("LogstashTcpSocketAppender başlatılırken bir hata oluştu: " + e.getMessage());
+            }
+
+
 
         }
 
