@@ -13,8 +13,8 @@
     <artifactId>log-quality</artifactId>
     <version>1.0</version>
 
-    <name>log-analyst</name>
-    <description>log analyst</description>
+    <name>log-quality</name>
+    <description>log-quality</description>
 
     <properties>
         <java.version>17</java.version>
@@ -70,12 +70,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
             <version>3.2.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-cassandra</artifactId>
-            <version>4.2.3</version>
         </dependency>
 
     </dependencies>

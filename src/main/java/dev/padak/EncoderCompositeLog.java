@@ -37,9 +37,9 @@ public class EncoderCompositeLog extends LoggingEventCompositeJsonEncoder
             String exception = event.getThrowableProxy() != null ? Arrays.toString(event.getThrowableProxy().getStackTraceElementProxyArray()) : "";
 
             Map<String, Object> logMap = new LinkedHashMap<>();
-            logMap.put("@timestamp", timestamp);
+            logMap.put("logTime", timestamp);
             logMap.put("level", level);
-            logMap.put("logId", requestId);
+            logMap.put("logId", requestId); 
             logMap.put("message", message);
             logMap.put("threadName", threadName);
             logMap.put("loggerName", loggerName);
@@ -48,7 +48,7 @@ public class EncoderCompositeLog extends LoggingEventCompositeJsonEncoder
 
 
             Map<String, String> fields = new HashMap<>();
-            fields.put("app", projectName+"logs");
+            fields.put("app", projectName+"_logs");
 
             logMap.put("fields",fields);
 

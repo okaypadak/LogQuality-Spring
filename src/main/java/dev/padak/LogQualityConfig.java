@@ -42,21 +42,6 @@ public class LogQualityConfig {
     @Value("${logquality.filebeat}")
     private Boolean filebeat;
 
-    @Value("${logquality.cassandra.connection}")
-    private Boolean cassandra;
-
-    @Value("${logquality.cassandra.host}")
-    private String host;
-
-    @Value("${logquality.cassandra.port}")
-    private Integer port;
-
-    @Value("${logquality.cassandra.keyspace}")
-    private String keyspace;
-
-    @Value("${logquality.cassandra.tableName}")
-    private String tableName;
-
 
     public void configureLogback(LoggerContext loggerContext) {
 
@@ -171,18 +156,6 @@ public class LogQualityConfig {
             }
 
 
-
-        }
-
-
-        if (cassandra) {
-            //CASSANDRA
-            CassandraAppender cassandraAppender = new CassandraAppender(host, port, keyspace, tableName);
-            cassandraAppender.setName("CASSANDRA");
-            cassandraAppender.setContext(loggerContext);
-            cassandraAppender.start();
-
-            rootLoggerDebug.addAppender(cassandraAppender);
 
         }
 

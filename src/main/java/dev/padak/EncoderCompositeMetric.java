@@ -52,7 +52,7 @@ public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
             logMap.put("processed", false);
 
             Map<String, String> fields = new HashMap<>();
-            fields.put("app", projectName+"metrics");
+            fields.put("app", projectName+"_metrics");
 
             logMap.put("fields",fields);
 
