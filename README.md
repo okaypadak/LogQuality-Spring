@@ -5,6 +5,7 @@ Bu Java uygulaması, log mesajlarına belirli log ID'leri atar, log dizilerinin 
 - **Log ID'leri:** Her log dizisine benzersiz log ID'leri atar.
 - **Başlangıç ve Bitiş İşaretleri:** Log dizilerinin başlangıç ve bitişini açıkça belirtin.
 - **Elasticsearch Entegrasyonu:** Logları TCP üzerinden Elasticsearch'e gönderin.
+- **Metrikler aktif olması:** actuator kütüphanesinin eklenmesi ile metrics, health, info endpointlerinin servis üzerinde açılması
 
 ## Başlangıç
 
@@ -18,8 +19,8 @@ Bu Java uygulaması, log mesajlarına belirli log ID'leri atar, log dizilerinin 
 1. Depoyu klonlayın:
 
     ```sh
-    git clone https://github.com/kullanici-adi/java-loglama-uygulamasi.git
-    cd java-loglama-uygulamasi
+    git clone https://github.com/okaypadak/LogQuality-Spring
+    cd LogQuality-Spring
     ```
 
 2. Maven klasörünüze ekleyin:
