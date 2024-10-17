@@ -1,69 +1,75 @@
-Bu Java uygulaması, log mesajlarına belirli log ID'leri atar, log dizilerinin başlangıç ve bitişini belirtir ve birkaç ayar ile logları TCP üzerinden Elasticsearch'e gönderir.
+# This Java application assigns specific log IDs to log messages, marks the start and end of log sequences, and sends logs to Elasticsearch over TCP with several settings.
 
-## Özellikler
+## Features
 
-- **Log ID'leri:** Her log dizisine benzersiz log ID'leri atar.
-- **Başlangıç ve Bitiş İşaretleri:** Log dizilerinin başlangıç ve bitişini açıkça belirtin.
-- **Elasticsearch Entegrasyonu:** Logları TCP üzerinden Elasticsearch'e gönderin.
-- **Metrikler aktif olması:** actuator kütüphanesinin eklenmesi ile metrics, health, info endpointlerinin servis üzerinde açılması
+- **Log IDs:** Assigns unique log IDs to each log sequence.
+- **Start and End Markers:** Clearly indicates the start and end of log sequences.
+- **Elasticsearch Integration:** Sends logs to Elasticsearch over TCP.
+- **Metrics Activation:** By adding the actuator library, the metrics, health, and info endpoints are exposed on the service.
 
-## Başlangıç
+## Related Projects
 
-### Gereksinimler
+- [LogQuality-Server](https://github.com/okaypadak/LogQuality-Server): The server component that handles the log data and communication with Elasticsearch.
+- [LogQuality-SpringTest](https://github.com/okaypadak/LogQuality-SpringTest): A project designed to test the logging functionality with Spring Boot applications.
+- [LogQuality-Exception-Generator](https://github.com/okaypadak/LogQuality-Exception-Generator): A tool for generating exceptions to test error handling and logging.
 
-- Java 17 veya daha üstü
+## Getting Started
+
+### Requirements
+
+- Java 17 or higher
 - Maven
 
-### Kurulum
+### Installation
 
-1. Depoyu klonlayın:
+1. Clone the repository:
 
     ```sh
     git clone https://github.com/okaypadak/LogQuality-Spring
     cd LogQuality-Spring
     ```
 
-2. Maven klasörünüze ekleyin:
+2. Add it to your Maven folder:
 
     ```sh
     mvn clean install
     ```
 
-### Diğer Projelerinize ekleyin, Konfigürasyon
-    
-3. diğer projelerinizin `pom.xml` dosyanıza aşağıdaki bağımlılıkları ve eklentileri ekleyin:
+### Add to Your Other Projects, Configuration
+
+3. Add the following dependencies and plugins to the `pom.xml` file of your other projects:
 
     ```xml
-		<dependency>
-			<groupId>dev.padak</groupId>
-			<artifactId>log-quality</artifactId>
-			<version>1.0</version>
-		</dependency>
+    <dependency>
+        <groupId>dev.padak</groupId>
+        <artifactId>log-quality</artifactId>
+        <version>1.0</version>
+    </dependency>
     ```
 
-4. `src/main/resources/application.yml` dosyasındaki loglama ayarlarını yapılandırın:
+4. Configure the logging settings in the `src/main/resources/application.yml` file:
 
     ```yml
-        logquality:
-        project_name: testapp
-        file: false
-        filebeat: false
-        logstash:
-            connection: true
-            host: 192.168.1.15
-            port: 31501
+    logquality:
+      project_name: testapp
+      file: false
+      filebeat: false
+      logstash:
+        connection: true
+        host: 192.168.1.15
+        port: 31501
 
-        management:
-        endpoints:
-            web:
-            exposure:
-                include: metrics
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: metrics
     ```
 
-## Katkıda Bulunma
+## Contributing
 
-Katkılar memnuniyetle karşılanır! Lütfen bir pull request gönderin veya değişikliklerinizi tartışmak için bir sorun açın.
+Contributions are welcome! Please send a pull request or open an issue to discuss the changes you would like to make.
 
-## Lisans
+## License
 
-Bu proje MIT Lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
+This project is licensed under the MIT License
