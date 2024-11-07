@@ -112,13 +112,11 @@ public class LogQualityDepency {
             groupedMetrics.put("gcMetrics", gcMetrics);
             groupedMetrics.put("threadMetrics", threadMetrics);
             groupedMetrics.put("appStartMetrics", appStartMetrics);
-            groupedMetrics.put("podCPU", podMetrics.get("podCPU"));
-            groupedMetrics.put("podMemory", podMetrics.get("podMemory"));
-
 
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 log.info("system_metrics: {}", objectMapper.writeValueAsString(groupedMetrics));
+                log.info("kubernetes_metrics: {}", objectMapper.writeValueAsString(podMetrics));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }

@@ -36,8 +36,8 @@ public class PodMetricsService {
                 String memoryUsage = container.getJSONObject("usage").getString("memory");
 
                 Map<String, Double> containerMetrics = new HashMap<>();
-                containerMetrics.put("podCPU", Double.valueOf(cpuUsage));
-                containerMetrics.put("podMemory", Double.valueOf(memoryUsage));
+                containerMetrics.put(podName+"_CPU", Double.valueOf(cpuUsage));
+                containerMetrics.put(podName+"_Memory", Double.valueOf(memoryUsage));
 
                 podMetricsMap.put(podName, containerMetrics);
                 break;
