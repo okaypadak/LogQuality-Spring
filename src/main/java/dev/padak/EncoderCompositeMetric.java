@@ -32,7 +32,6 @@ public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
         timestampProvider.setFieldName("@timestamp");
         timestampProvider.setPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
-
         JsonProviders<ILoggingEvent> providers = new JsonProviders<>();
         providers.addProvider(timestampProvider);
 
@@ -48,13 +47,15 @@ public class EncoderCompositeMetric extends LoggingEventCompositeJsonEncoder
             String message = event.getFormattedMessage();
 
             Map<String, Object> logMap = new LinkedHashMap<>();
-            logMap.put("message", message);
+            logMap.put("metrics", message);
             logMap.put("processed", false);
 
             Map<String, String> fields = new HashMap<>();
             fields.put("app", projectName+"_metrics");
 
             logMap.put("fields",fields);
+
+
 
             String jsonLog = objectMapper.writeValueAsString(logMap)  + "\n";
 
